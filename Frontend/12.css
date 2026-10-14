@@ -1,0 +1,997 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #07101a;
+    --panel: #0d1824;
+    --panel2: #101e2c;
+    --border: #1d3042;
+    --text: #edf5ff;
+    --muted: #8293a7;
+    --green: #48e0ae;
+    --blue: #45a7ff;
+    --red: #ff5964;
+    --yellow: #ffc857;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: Arial, sans-serif;
+}
+
+
+/* LOGIN */
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background:
+        radial-gradient(circle at 20% 20%, #12314a, transparent 30%),
+        radial-gradient(circle at 80% 80%, #102b3c, transparent 30%),
+        #050c14;
+}
+
+.login-box {
+    width: 420px;
+    padding: 35px;
+
+    background: rgba(13, 24, 36, .95);
+
+    border: 1px solid var(--border);
+    border-radius: 20px;
+
+    box-shadow: 0 30px 80px #000;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.logo h1 {
+    font-size: 32px;
+}
+
+.logo {
+    font-size: 40px;
+    color: var(--green);
+}
+
+.subtitle {
+    color: var(--muted);
+    margin: 8px 0 25px;
+}
+
+.tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.tabs button {
+    flex: 1;
+    padding: 12px;
+
+    background: #152638;
+    color: white;
+
+    border: 0;
+    border-radius: 8px;
+
+    cursor: pointer;
+}
+
+.tabs button.active {
+    background: var(--green);
+    color: #04110d;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 6px;
+
+    color: #aab8c8;
+    font-size: 13px;
+}
+
+input,
+select {
+    width: 100%;
+
+    padding: 13px;
+
+    background: #08131e;
+    color: white;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    outline: none;
+}
+
+input:focus,
+select:focus {
+    border-color: var(--green);
+}
+
+.main-btn {
+    width: 100%;
+    margin-top: 20px;
+
+    padding: 14px;
+
+    background: var(--green);
+    color: #04120d;
+
+    border: 0;
+    border-radius: 8px;
+
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.demo {
+    text-align: center;
+    margin-top: 15px;
+
+    color: var(--muted);
+    font-size: 12px;
+}
+
+
+/* APP */
+
+#app {
+    display: flex;
+    min-height: 100vh;
+}
+
+.hidden {
+    display: none !important;
+}
+
+
+/* SIDEBAR */
+
+.sidebar {
+    width: 250px;
+
+    background: #09141f;
+
+    border-right: 1px solid var(--border);
+
+    padding: 22px;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    margin-bottom: 35px;
+}
+
+.brand-icon {
+    font-size: 30px;
+    color: var(--green);
+}
+
+.brand h2 {
+    font-size: 20px;
+}
+
+.brand small {
+    color: var(--muted);
+    font-size: 8px;
+}
+
+.sidebar button {
+    width: 100%;
+
+    padding: 13px;
+    margin-bottom: 7px;
+
+    background: transparent;
+    color: #a9b6c5;
+
+    border: 0;
+    border-radius: 8px;
+
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.sidebar button:hover {
+    background: #132333;
+    color: white;
+}
+
+.logout {
+    margin-top: auto !important;
+    color: var(--red) !important;
+}
+
+
+/* MAIN */
+
+.main {
+    flex: 1;
+}
+
+header {
+    height: 90px;
+
+    padding: 20px 30px;
+
+    border-bottom: 1px solid var(--border);
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header small {
+    color: var(--muted);
+}
+
+header h1 {
+    font-size: 22px;
+    margin-top: 5px;
+}
+
+.top-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    color: var(--muted);
+}
+
+.content {
+    padding: 25px;
+}
+
+
+/* STATS */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat {
+    background: var(--panel);
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+
+    padding: 20px;
+}
+
+.stat span {
+    display: block;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.stat b {
+    display: block;
+    font-size: 30px;
+    margin-top: 10px;
+}
+
+.stat.danger b {
+    color: var(--red);
+}
+
+.stat.warning b {
+    color: var(--yellow);
+}
+
+
+/* PANELS */
+
+.panel {
+    background: var(--panel);
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    padding: 20px;
+}
+
+.panel h2 {
+    font-size: 17px;
+}
+
+.panel p {
+    color: var(--muted);
+    margin-top: 5px;
+}
+
+
+/* DASHBOARD */
+
+.dashboard-grid {
+    display: grid;
+
+    grid-template-columns: 2fr 1fr;
+
+    gap: 15px;
+}
+
+.map-panel {
+    grid-row: span 2;
+}
+
+.panel-title {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.live {
+    color: var(--green);
+}
+
+
+/* MAP */
+
+.map {
+    position: relative;
+
+    height: 500px;
+
+    overflow: hidden;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(#ffffff05 1px, transparent 1px),
+        linear-gradient(90deg, #ffffff05 1px, transparent 1px),
+        #08131e;
+
+    background-size: 40px 40px;
+}
+
+.world {
+    position: absolute;
+
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff09;
+
+    font-size: 50px;
+    font-weight: bold;
+}
+
+
+/* ROUTE */
+
+.route {
+    position: absolute;
+
+    width: 100%;
+    height: 100%;
+}
+
+.route path {
+    fill: none;
+
+    stroke: var(--green);
+
+    stroke-width: 3;
+
+    stroke-dasharray: 12 8;
+
+    animation: routeMove 2s linear infinite;
+}
+
+@keyframes routeMove {
+
+    to {
+        stroke-dashoffset: -40;
+    }
+
+}
+
+
+/* AIRCRAFT */
+
+.plane {
+    position: absolute;
+
+    color: var(--blue);
+
+    font-size: 22px;
+
+    z-index: 5;
+
+    animation: fly1 10s linear infinite;
+
+    filter: drop-shadow(0 0 8px #45a7ff);
+}
+
+.plane span {
+    display: block;
+
+    font-size: 10px;
+
+    color: white;
+}
+
+.plane1 {
+    left: 25%;
+    top: 55%;
+}
+
+.plane2 {
+    left: 50%;
+    top: 45%;
+
+    animation-delay: 2s;
+}
+
+.plane3 {
+    left: 70%;
+    top: 30%;
+
+    animation-delay: 4s;
+}
+
+@keyframes fly1 {
+
+    0% {
+        transform: translate(0, 0);
+    }
+
+    50% {
+        transform: translate(100px, -50px);
+    }
+
+    100% {
+        transform: translate(200px, 20px);
+    }
+
+}
+
+.emergency-plane {
+    color: var(--red);
+}
+
+
+/* CONFLICT */
+
+.conflict {
+    position: absolute;
+
+    left: 48%;
+    top: 48%;
+
+    width: 50px;
+    height: 50px;
+
+    display: grid;
+    place-items: center;
+
+    color: var(--red);
+
+    border: 2px solid var(--red);
+
+    border-radius: 50%;
+
+    animation: conflictPulse 1s infinite;
+}
+
+@keyframes conflictPulse {
+
+    50% {
+        box-shadow:
+            0 0 0 15px #ff596422,
+            0 0 30px #ff596466;
+    }
+
+}
+
+
+/* WEATHER */
+
+.weather {
+    position: absolute;
+
+    padding: 10px;
+
+    border-radius: 50%;
+
+    background: #142536;
+
+    animation: weatherPulse 2s infinite;
+}
+
+.storm {
+    left: 60%;
+    top: 25%;
+}
+
+.rain {
+    left: 70%;
+    top: 55%;
+}
+
+@keyframes weatherPulse {
+
+    50% {
+        transform: scale(1.2);
+    }
+
+}
+
+.airport {
+    position: absolute;
+
+    padding: 5px;
+
+    border: 1px solid var(--green);
+
+    border-radius: 5px;
+
+    color: var(--green);
+
+    font-size: 10px;
+}
+
+.airport1 {
+    left: 8%;
+    top: 75%;
+}
+
+.airport2 {
+    right: 8%;
+    top: 18%;
+}
+
+
+/* WEATHER PANEL */
+
+.weather-big {
+    display: flex;
+    gap: 20px;
+
+    align-items: center;
+
+    margin: 25px 0;
+}
+
+.weather-big > span {
+    font-size: 55px;
+}
+
+.weather-info {
+    display: grid;
+    gap: 12px;
+}
+
+.weather-info div {
+    display: flex;
+    justify-content: space-between;
+
+    color: var(--muted);
+}
+
+.weather-info b {
+    color: white;
+}
+
+
+/* ALERT */
+
+.alert {
+    margin: 20px 0;
+
+    padding: 15px;
+
+    border-left: 3px solid var(--red);
+
+    background: #ff596410;
+}
+
+.alert b {
+    color: var(--red);
+}
+
+.buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.buttons button,
+.conflict-card button {
+    padding: 9px 12px;
+
+    background: #172839;
+    color: white;
+
+    border: 1px solid var(--border);
+
+    border-radius: 7px;
+
+    cursor: pointer;
+}
+
+
+/* ROUTE */
+
+.route-layout {
+    display: grid;
+
+    grid-template-columns: 350px 1fr;
+
+    gap: 20px;
+
+    margin-top: 20px;
+}
+
+.description {
+    color: var(--muted);
+}
+
+.route-form h3 {
+    margin: 25px 0 10px;
+}
+
+.check {
+    display: flex;
+
+    gap: 10px;
+
+    align-items: center;
+
+    color: var(--muted);
+}
+
+.check input {
+    width: auto;
+}
+
+.route-result {
+    min-height: 500px;
+}
+
+.animated-route {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    margin: 80px 30px;
+
+    gap: 10px;
+}
+
+.route-node {
+    width: 60px;
+    height: 60px;
+
+    display: grid;
+    place-items: center;
+
+    background: #122537;
+
+    border: 2px solid var(--green);
+
+    border-radius: 50%;
+
+    color: var(--green);
+    font-weight: bold;
+
+    z-index: 2;
+}
+
+.route-line {
+    flex: 1;
+
+    height: 3px;
+
+    background: repeating-linear-gradient(
+        90deg,
+        var(--green) 0 10px,
+        transparent 10px 20px
+    );
+}
+
+#routePlane {
+    position: absolute;
+
+    left: 0;
+
+    top: -35px;
+
+    font-size: 25px;
+
+    color: var(--blue);
+
+    display: none;
+}
+
+#routePlane.animate {
+    display: block;
+
+    animation: routePlane 4s linear forwards;
+}
+
+@keyframes routePlane {
+
+    from {
+        left: 2%;
+    }
+
+    to {
+        left: 93%;
+    }
+
+}
+
+.route-results {
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 10px;
+}
+
+.route-results div,
+.conditions div {
+    background: #09141f;
+
+    padding: 15px;
+
+    border-radius: 8px;
+
+    color: var(--muted);
+}
+
+.route-results b,
+.conditions b {
+    display: block;
+
+    margin-top: 8px;
+
+    color: white;
+}
+
+.conditions {
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 10px;
+
+    margin-top: 20px;
+}
+
+
+/* TABLE */
+
+.table-panel {
+    margin-top: 20px;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 15px;
+
+    text-align: left;
+
+    border-bottom: 1px solid var(--border);
+}
+
+th {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+
+/* AIRPORT */
+
+.airport-grid {
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 15px;
+
+    margin-top: 20px;
+}
+
+.airport-card {
+    padding: 20px;
+
+    background: var(--panel);
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+}
+
+.airport-card > b {
+    color: var(--green);
+
+    font-size: 22px;
+}
+
+.airport-card h3 {
+    margin-top: 10px;
+}
+
+.airport-card p {
+    color: var(--muted);
+    margin: 8px 0;
+}
+
+.online,
+.busy,
+.high {
+    font-size: 12px;
+}
+
+.online {
+    color: var(--green);
+}
+
+.busy,
+.high {
+    color: var(--yellow);
+}
+
+
+/* CONFLICT CARD */
+
+.conflict-card {
+    margin-top: 20px;
+
+    max-width: 600px;
+
+    border-left: 4px solid var(--red);
+}
+
+
+/* WEATHER GRID */
+
+.weather-grid {
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 15px;
+
+    margin-top: 20px;
+}
+
+.metric {
+    font-size: 35px;
+
+    color: var(--green);
+
+    margin-top: 20px;
+}
+
+
+/* PRIORITY */
+
+.queue {
+    margin-top: 20px;
+}
+
+.queue div {
+    padding: 20px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+
+/* USER */
+
+.user-flight {
+    margin-top: 20px;
+}
+
+.user-details {
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 10px;
+
+    margin-top: 30px;
+}
+
+.user-details div {
+    background: #09141f;
+
+    padding: 20px;
+
+    color: var(--muted);
+}
+
+.user-details b {
+    display: block;
+
+    margin-top: 8px;
+
+    color: white;
+}
+
+
+/* RESPONSIVE */
+
+@media(max-width: 1000px) {
+
+    .sidebar {
+        width: 190px;
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .route-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .airport-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+@media(max-width: 700px) {
+
+    .sidebar {
+        display: none;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .airport-grid,
+    .weather-grid,
+    .conditions,
+    .route-results {
+        grid-template-columns: 1fr;
+    }
+
+}
