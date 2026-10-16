@@ -434,9 +434,9 @@ function loop(now) {
   const moving = !paused && !waiting;
   if (moving) movePlanes(seconds);
   checkConflicts();
-  if (!paused || waiting) tickTimers(seconds);            // conflict countdown (crash at zero); stops when you pause
+  if (!paused || waiting) tickTimers(seconds);            
   trailTimer += seconds;
-  if (moving && trailTimer > 0.15) {                     // remember the last few positions for the trail
+  if (moving && trailTimer > 0.15) {                    
     trailTimer = 0;
     flights.forEach(f => { if (f.status === 'flying') { f.trail.push(planePosition(f)); if (f.trail.length > 14) f.trail.shift(); } });
   }
@@ -446,7 +446,7 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
-// ---------- buttons ----------
+
 function togglePause() {
   if (waiting) { alert('First fix the conflict: change altitude, speed or route.'); return; }
   paused = !paused;
@@ -457,13 +457,13 @@ function selectFlight(id) { selectedId = id; tab = 'flights'; showPanels(); }
 function chooseControlled(id) { controlledId = id; showPanels(); }
 function openTab(name) { tab = name; showPanels(); }
 
-// ---------- the right side ----------
+
 function showPanels() {
   $('clockPill').textContent = 'Clock ' + clockText(simMinutes);
   showBackendBadge();
-  predictions = predictAll();                       // look 60 minutes ahead
+  predictions = predictAll();                      
   showConflict();
-  // outside the Safety tab: only a one-line banner (keeps the screen clean)
+  
   const wxList = weatherAlerts();
   let banners = '';
   if (tab !== 'safety' && predictions.length) {
@@ -480,7 +480,7 @@ function showPanels() {
   else if (predictions.length) { air.textContent = 'Conflict in ' + predictions[0].start + ' min'; air.className = 'pill orange'; }
   else { air.textContent = 'Airspace safe'; air.className = 'pill green'; }
 
-  // only 2 tabs: Flights and Safety
+  
   const flying = flights.filter(f => f.status === 'flying' || f.status === 'holding').length;   // holding planes are in the air too
   const alerts = activeConflicts.length + predictions.length + wxList.length;
   $('tabs').innerHTML =
@@ -509,7 +509,7 @@ function tabButton(id, label) {
   return '<button class="' + (tab === id ? 'on' : '') + '" onclick="openTab(\'' + id + '\')">' + label + '</button>';
 }
 
-// A row of small chips: one per flight (highest priority first), the waiting route, and "+ New flight".
+
 function chipsHTML() {
   // status by colour: red = conflict, grey = landed, crossed out = crashed
   const state = f => f.status === 'crashed' ? ' crashedChip' : f.status === 'landed' ? ' landedChip' : f.status === 'holding' ? ' holdChip' :
@@ -524,7 +524,7 @@ function chipsHTML() {
   return html + '<button class="chip add" onclick="goHome()">+ New flight</button></div>';
 }
 
-// Flights tab, before take-off: route options with distance, time, fuel cost
+
 function planHTML() {
   const total = routeKm(plan.route), litres = total * LITRES_PER_KM;
   const options = plan.options.map((opt, k) => {
@@ -558,7 +558,7 @@ function planHTML() {
       '<button class="go" onclick="startFlight()">' + (departIn ? 'Schedule flight' : 'Start flight') + '</button><button onclick="changePlan()">Change</button></div>';
 }
 
-// Flights tab, after take-off: the selected plane
+
 function liveHTML() {
   const plane = findFlight(selectedId) || flights[flights.length - 1];
   if (!plane) return '<p class="muted">No flight yet.</p><button class="go" onclick="goHome()">Plan a flight</button>';
@@ -649,8 +649,8 @@ document.onmousedown = () => { mouseDown = true; };
 document.onmouseup = () => { setTimeout(() => { mouseDown = false; }, 150); };
 fillForm();
 drawBackground();
-connectBackend();          // use the C++ backend if it is running (api.js)
-showPage();                // open the page in the address (#/plan by default)
+connectBackend();         
+showPage();                
 setupZoom();
 addLog('System ready: ' + cities.length + ' cities.');
 showPanels();

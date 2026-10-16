@@ -1,48 +1,20 @@
-# AeroGuard Complete Frontend
+# AeroGuard (frontend)
 
-A role-based frontend prototype for:
-AeroGuard: Air Traffic Control and Conflict Resolution System
+Made with plain HTML, CSS and JavaScript. No framework, nothing to install.
 
 ## Run
-Open `index.html` in a browser, or use VS Code Live Server.
+    python -m http.server 8000        (Mac: python3 -m http.server 8000)
+Open http://localhost:8000  (Ctrl+C to stop). Live weather needs internet.
 
-## Demo accounts
-ATC:
-- username: atc
-- password: 1234
+## Files (load order)
+1. index.html   page structure
+2. style.css    design
+3. data.js      cities, connections, flight types, ATF price
+4. dijkstra.js  cheapest route + route options
+5. weather.js   live weather, penalty, sample/demo weather
+6. conflict.js  conflict now + controller tools
+7. predict.js   conflict prediction (60 min) + What-if
+8. map.js       radar
+9. main.js      screens, tabs, flying planes
 
-User:
-- username: user
-- password: 1234
-
-## Included
-- ATC dashboard
-- User flight dashboard
-- Role-based navigation
-- Animated aircraft
-- Animated selected route
-- Airspace graph visualization
-- Flight management table
-- Route planner / Dijkstra simulation UI
-- Conflict detection and resolution UI
-- Weather intelligence
-- Priority queue
-- Analytics
-- Add-flight modal
-- Responsive layout
-
-## Important
-This is a frontend simulation. The buttons and displayed algorithm results are currently simulated in JavaScript.
-
-Next integration:
-Frontend -> API/data interface -> C/C++ AeroGuard core
-
-The frontend should receive real:
-- graph route
-- Dijkstra result
-- flight position
-- weather penalty
-- priority
-- conflict state
-- resolution
-from the backend.
+Read SAMJHO.md for the explanation in simple Hinglish.
