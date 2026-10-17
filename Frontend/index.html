@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AeroGuard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1 onclick="goHome()" title="Home">
+      <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
+      <span>AERO<em>GUARD</em></span> <small>Air Traffic Control · India</small></h1>
+    <!-- the pages of the app (each page has its own address, so the browser's Back button works) -->
+    <nav class="mainNav" id="navController">
+      <a href="#/plan" id="nav-plan">Plan flight</a>
+      <a href="#/radar" id="nav-radar">Radar</a>
+      <a href="#/board" id="nav-board">Board</a>
+      <a href="#/weather" id="nav-weather">Weather</a>
+      <a href="#/log" id="nav-log">Log</a>
+    </nav>
+    <span class="right"><span class="pill grey" id="backendBadge"></span><span class="pill" id="airStatus"></span><span class="fuel" id="clockPill" title="Flight clock: starts at this computer's time and runs with the simulation"></span><span class="fuel" id="fuelPrice" title="Jet fuel price for domestic airlines"></span></span>
+  </header>
+
+  <!-- red bar on every page except the radar when a conflict is running -->
+  <div id="globalAlert"></div>
+
+  <!-- PAGE 1 (#/plan): where does the flight go? -->
+  <section id="pagePlan" class="card form page">
+    <div class="steps"><span class="on">1. Route</span><span>2. Flight details</span><span>3. Choose route and start</span></div>
+    <h2>Where does the flight go?</h2>
+    <p class="muted">Choose the city where it starts and the city where it lands.</p>
+    <div class="cities">
+      <label>From <select id="fromSel"></select></label>
+      <span class="arrow">→</span>
+      <label>To <select id="toSel"></select></label>
+    </div>
+    <div id="cityInfo" class="cityInfo"></div>
+    <button class="go big" onclick="nextStep()">Next: flight details ›</button>
+    <p class="small muted" id="formWeather"></p>
+    <div id="homeStatus"></div>
+  </section>
+
+  <!-- PAGE 2 (#/details): what flies? -->
+  <section id="pageDetails" class="card form page hidden">
+    <div class="steps"><span class="done">1. Route</span><span class="on">2. Flight details</span><span>3. Choose route and start</span></div>
+    <h2>Flight details</h2>
+    <p class="muted" id="detailsSub"></p>
+    <p class="label">Flight type</p>
+    <div id="typeButtons"></div>
+    <div class="who">
+      <label>Airline / operator <select id="airlineSel"></select></label>
+      <label>Aircraft <select id="planeSel"></select></label>
+      <label id="reasonBox" class="hidden">Medical reason <select id="reasonSel"></select></label>
+    </div>
+    <div class="who" id="loadBox"><label><span id="loadLabel">Passengers on board</span> <input type="number" id="loadInput" min="0"></label></div>
+    <p class="note" id="capacityNote"></p>
+    <p class="note warn" id="bigJetNote"></p>
+    <div class="btns center"><button onclick="go('plan')">‹ Back</button><button class="go big" onclick="findRoute()">Find route ›</button></div>
+  </section>
+
+  <!-- PAGE 3 (#/radar): the radar, the route options (step 3), live flights and safety -->
+  <section id="mapScreen" class="hidden">
+    <div class="leftCol">
+      <div class="card mapCard" id="mapCard">
+        <svg id="map" viewBox="0 0 780 740"><g id="mapBg"></g><g id="mapLive"></g></svg>
+        <div class="regionBar" id="regionBar"></div>
+        <div class="zoomBar">
+          <button onclick="zoom(0.7)" title="Zoom in">+</button>
+          <button onclick="zoom(1 / 0.7)" title="Zoom out">−</button>
+          <button onclick="fitRoute()" title="Zoom to the route">◎</button>
+          <button onclick="zoomReset()" title="Whole India">⤢</button>
+          <span id="zoomLevel">100%</span>
+        </div>
+      </div>
+      <div class="card wstrip" id="weatherStrip"></div>
+    </div>
+    <div class="side">
+      <div id="conflictBox"></div>
+      <div id="predictBox"></div>
+      <div class="seg2" id="tabs"></div>
+      <div class="card panel" id="panel"></div>
+    </div>
+  </section>
+
+  <!-- PAGE (#/board): all flights in one table, like an airport board -->
+  <section id="pageBoard" class="card page wide hidden">
+    <h2>Flights board</h2>
+    <div id="boardPage"></div>
+  </section>
+
+  <!-- PAGE (#/weather): weather of all cities -->
+  <section id="pageWeather" class="card page wide hidden">
+    <h2>Weather</h2>
+    <!-- search any city: weather now and the last 5 days (weather.js) -->
+    <div class="wsearch">
+      <input id="weatherSearch" list="cityNames" placeholder="Search a city, e.g. Agra or Shimla" onkeydown="if (event.key === 'Enter') searchWeather()">
+      <datalist id="cityNames"></datalist>
+      <button class="go" onclick="searchWeather()">Search</button>
+    </div>
+    <div id="weatherSearchResult"></div>
+    <h3>All AeroGuard cities</h3>
+    <div id="weatherPage"></div>
+  </section>
+
+  <!-- PAGE (#/log): everything that happened -->
+  <section id="pageLog" class="card page wide hidden">
+    <h2>Log</h2>
+    <div id="logPage"></div>
+  </section>
+
+  <!-- crash window -->
+  <div id="crashBox" class="crashBack hidden"></div>
+
+  <script src="data.js"></script>
+  <script src="dijkstra.js"></script>
+  <script src="weather.js"></script>
+  <script src="conflict.js"></script>
+  <script src="predict.js"></script>
+  <script src="api.js"></script>
+  <script src="map.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
