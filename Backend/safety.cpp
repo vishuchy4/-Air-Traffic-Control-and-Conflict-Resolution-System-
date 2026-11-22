@@ -11,7 +11,7 @@ double kmApart(const Plane& a, const Plane& b) {
 }
 
 int feetApart(const Plane& a, const Plane& b) {
-    return std::abs(a.altitude - b.altitude);
+    return std::abs(altitudeNow(a) - altitudeNow(b));  // their real heights now (climbing, level or coming down)
 }
 
 bool inConflict(const Plane& a, const Plane& b) {
@@ -23,17 +23,18 @@ Prediction predictConflict(const Plane& a, const Plane& b) {
     Prediction result;
     result.feet = feetApart(a, b);
 
-    if (result.feet >= SAFE_HEIGHT_FT) return result;   // different heights: always safe
-
+    std::vector<double> kmA = distanceTable(a, LOOK_AHEAD_MINUTES), kmB = distanceTable(b, LOOK_AHEAD_MINUTES);  // the km flown, minute by minute (worked out once)
     for (int minute = 1; minute <= LOOK_AHEAD_MINUTES; minute++) {
         Point p, q;
-        if (!whereAfter(a, minute, p) || !whereAfter(b, minute, q)) break;   // one has landed
+        if (!whereAtKm(a, kmA[minute], p) || !whereAtKm(b, kmB[minute], q)) break;  // one has landed
 
         double km = kmBetween(p.lat, p.lon, q.lat, q.lon);
+        int feet = std::abs(altitudeAtKm(a, kmA[minute]) - altitudeAtKm(b, kmB[minute]));  // heights change while climbing / coming down
 
-        if (km < SAFE_DISTANCE_KM && !result.found) {   // the first minute they are too close
+        if (km < SAFE_DISTANCE_KM && feet < SAFE_HEIGHT_FT && !result.found) {  // the first minute they are too close
             result.found = true;
             result.startMinute = minute;
+            result.feet = feet;
         }
         if (result.closestKm < 0 || km < result.closestKm) {
             result.closestKm = km;
@@ -42,6 +43,21 @@ Prediction predictConflict(const Plane& a, const Plane& b) {
         }
     }
     return result;
+}
+
+Approach closestApproach(const Plane& a, const Plane& b) {
+    Approach best;
+    best.km = kmApart(a, b);  // now (minute 0)
+    for (int minute = 1; minute <= LOOK_AHEAD_MINUTES; minute++) {
+        Point p, q;
+        if (!whereAfter(a, minute, p) || !whereAfter(b, minute, q)) break;  // one has landed
+        double km = kmBetween(p.lat, p.lon, q.lat, q.lon);
+        if (km < best.km) {
+            best.km = km;
+            best.minutes = minute;
+        }
+    }
+    return best;
 }
 
 Plane withAltitude(const Plane& p, int change) {
@@ -60,17 +76,20 @@ bool withNewRoute(const Plane& p, Plane& result) {
     int last = (int)p.route.size() - 1;
     int startLeg;
 
-    if (p.progress < 0.3) startLeg = p.leg;            // just left a city: it can turn back
-    else if (p.leg + 1 < last) startLeg = p.leg + 1;   // otherwise change after the next city
-    else return false;                                 // last road: no change possible
+    if (p.progress < 0.3)
+        startLeg = p.leg;  // just left a city: it can turn back
+    else if (p.leg + 1 < last)
+        startLeg = p.leg + 1;  // otherwise change after the next city
+    else
+        return false;  // last road: no change possible
 
     // close the road it would take from there, and search again
     Route r;
     if (!findRoute(p.route[startLeg], p.route[last], p.route[startLeg], p.route[startLeg + 1], {}, r)) return false;
 
     result = p;
-    result.route.assign(p.route.begin(), p.route.begin() + startLeg);        // the part already flown
-    result.route.insert(result.route.end(), r.cities.begin(), r.cities.end()); // the new part
-    if (startLeg == p.leg) result.progress = 0;                              // it turned back
+    result.route.assign(p.route.begin(), p.route.begin() + startLeg);           // the part already flown
+    result.route.insert(result.route.end(), r.cities.begin(), r.cities.end());  // the new part
+    if (startLeg == p.leg) result.progress = 0;                                 // it turned back
     return true;
 }
