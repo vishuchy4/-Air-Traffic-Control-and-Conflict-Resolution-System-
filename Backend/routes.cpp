@@ -30,7 +30,8 @@ bool findRoute(int start, int end, int bannedFrom, int bannedTo,
         done[now] = true;
 
         // 2. look at every road leaving it: is going this way cheaper?
-        for (int next : neighbours[now]) {
+        for (RoadNode* road = roadsFrom[now]; road != nullptr; road = road->next) {   // walk the linked list
+            int next = road->to;
             if (now == bannedFrom && next == bannedTo) continue;                     // closed road
             if (std::find(avoid.begin(), avoid.end(), next) != avoid.end()) continue; // storm city
 
