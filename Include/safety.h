@@ -5,16 +5,16 @@
 
 #include "planes.h"
 
-const int SAFE_DISTANCE_KM = 100;    // closer than this ...
-const int SAFE_HEIGHT_FT = 1000;     // ... and less height gap than this = conflict
-const int LOOK_AHEAD_MINUTES = 60;   // how far the prediction looks ahead
+const int SAFE_DISTANCE_KM = 100;   // closer than this ...
+const int SAFE_HEIGHT_FT = 1000;    // ... and less height gap than this = conflict
+const int LOOK_AHEAD_MINUTES = 60;  // how far the prediction looks ahead
 
 struct Prediction {
-    bool found = false;      // true = a conflict is coming
-    int startMinute = 0;     // first minute they are too close
-    double closestKm = -1;   // smallest distance
-    int feet = 0;            // height difference
-    Point a, b;              // where the two planes are at the closest moment
+    bool found = false;     // true = a conflict is coming
+    int startMinute = 0;    // first minute they are too close
+    double closestKm = -1;  // smallest distance
+    int feet = 0;           // height difference
+    Point a, b;             // where the two planes are at the closest moment
 };
 
 double kmApart(const Plane& a, const Plane& b);
@@ -26,9 +26,16 @@ bool inConflict(const Plane& a, const Plane& b);
 // Move both planes ahead minute by minute (up to 60) and see if they get too close.
 Prediction predictConflict(const Plane& a, const Plane& b);
 
+// The smallest distance between two planes in the next 60 minutes, and when (for any height gap).
+struct Approach {
+    double km = 0;
+    int minutes = 0;
+};
+Approach closestApproach(const Plane& a, const Plane& b);
+
 // The 3 fixes, made on a COPY of the plane (for the What-if tests)
-Plane withAltitude(const Plane& p, int change);      // kept between 20,000 and 40,000 ft
-Plane withSpeed(const Plane& p, int change);         // kept between 500 and 900 km/h
-bool withNewRoute(const Plane& p, Plane& result);    // false if not possible now
+Plane withAltitude(const Plane& p, int change);    // kept between 20,000 and 40,000 ft
+Plane withSpeed(const Plane& p, int change);       // kept between 500 and 900 km/h
+bool withNewRoute(const Plane& p, Plane& result);  // false if not possible now
 
 #endif
