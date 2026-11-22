@@ -442,8 +442,214 @@ b, strong { font-weight: 700; }
 .departSel select { padding: 8px; }
 
 
-/* compact header: the status pills, the menu and the logo fit on one line */
+/* shown when the C++ server is not running */
+.offline { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: rgba(240, 244, 249, .97); }
+.offline .card { max-width: 560px; padding: 28px 32px; border-top: 4px solid var(--red); }
+.offline pre { background: #0f1a26; color: #e6edf5; padding: 12px 14px; border-radius: 8px; font-size: 14px; overflow-x: auto; }
+
+/* compact header: the 4 status pills, the menu and the logo fit on one line */
 header .right { gap: 6px; }
 header .pill, header .fuel { padding: 5px 10px; font-size: 13px; white-space: nowrap; }
 header h1 small { display: none; }
 @media (max-width: 1300px) { header .fuel#fuelPrice { display: none; } }
+
+/* ===== full-screen radar (fullscreen.js) ===== */
+/* the radar fills the whole screen; the flight list (left) and the panel (right) float on top of its empty edges */
+#hudFlights, #hudExit, #hudAlert, #hudPanelBtn { display: none; }
+body.radarFull { overflow: hidden; }
+body.radarFull header, body.radarFull #globalAlert, body.radarFull .wstrip, body.radarFull #predictBox { display: none; }
+body.radarFull #mapScreen { position: fixed; inset: 0; z-index: 25; display: block; max-width: none; margin: 0; padding: 0; background: #ffffff; }
+body.radarFull .leftCol, body.radarFull .mapCard { position: absolute; top: 0; left: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+body.radarFull #map { width: 100%; height: 100%; min-height: 0; border-radius: 0; }
+body.radarFull #hudFlights { display: block; position: absolute; top: 10px; left: 10px; bottom: 10px; width: 245px; z-index: 3; overflow-y: auto; }
+body.radarFull .side { position: absolute; top: 10px; right: 10px; bottom: 10px; width: 400px; z-index: 3; height: auto; max-height: none; overflow-y: auto; }
+body.radarFull.panelHidden .side { display: none; }
+body.radarFull .zoomBar { right: 422px; }
+body.radarFull.panelHidden .zoomBar { right: 14px; }
+body.radarFull .regionBar { left: 267px; }
+body.radarFull #hudExit { display: block; position: absolute; top: 12px; left: 267px; z-index: 4; font-weight: 700; background: #ffffff; }
+body.radarFull #hudPanelBtn { display: block; position: absolute; bottom: 12px; right: 422px; z-index: 4; font-weight: 700; background: #ffffff; }
+body.radarFull.panelHidden #hudPanelBtn { right: 14px; }
+body.radarFull #hudAlert:not(:empty) { display: block; position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: max-content; max-width: 400px; z-index: 4;
+  padding: 10px 16px; border-radius: 10px; background: #fdecee; color: #8a1d2c; border: 2px solid var(--red); font-size: 15px;
+  box-shadow: 0 6px 18px rgba(198, 40, 57, .25); text-align: center; animation: hudPulse 1.2s ease-in-out infinite; }
+@keyframes hudPulse { 50% { box-shadow: 0 6px 26px rgba(198, 40, 57, .55); } }
+body.radarFull .crashBack { z-index: 40; }
+.hudTitle { font-weight: 800; font-size: 18px; margin: 2px 0 10px; background: rgba(255, 255, 255, .92); border-radius: 8px; padding: 4px 8px; }
+.hudTitle span { font-weight: 600; font-size: 13px; color: var(--muted); margin-left: 6px; }
+.hudRow { background: rgba(255, 255, 255, .96); border: 1px solid var(--line); border-left: 4px solid #2f7fd6; border-radius: 10px; padding: 9px 11px;
+  margin-bottom: 8px; cursor: pointer; font-size: 13px; line-height: 1.45; box-shadow: 0 2px 8px rgba(15, 26, 38, .08); }
+.hudRow:hover { background: #f7f9fc; }
+.hudRow.on { border-color: var(--saffron); box-shadow: 0 0 0 2px rgba(232, 131, 12, .25); }
+.hudRow.alert { border-left-color: var(--red); background: #fff5f6; }
+.hudRow.dim { opacity: .8; }
+.hudHead { font-size: 15px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.hudHead i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.hudHead em { font-style: normal; font-size: 11px; font-weight: 800; color: #ffffff; background: var(--red); padding: 1px 6px; border-radius: 4px; margin-left: auto; }
+.hudRoute { font-weight: 700; margin: 2px 0 4px; }
+.hudNext { color: #1f3b5c; }
+.hudNext.bad { color: var(--red); font-weight: 700; }
+.hudSmall { color: var(--muted); font-size: 12px; }
+#fullBtn svg { display: block; margin: auto; }
+body.radarFull .side .stats b { font-size: 16px; }
+body.radarFull .side .stats div { padding: 8px; }
+body.radarFull .side .tool { flex-wrap: nowrap; }
+body.radarFull .side .tool button { white-space: nowrap; }
+@media (max-width: 1250px) {
+  body.radarFull #hudFlights { width: 215px; }
+  body.radarFull .side { width: 360px; }
+  body.radarFull .zoomBar, body.radarFull #hudPanelBtn { right: 382px; }
+  body.radarFull .regionBar, body.radarFull #hudExit { left: 237px; }
+}
+
+/* ===== 3D view (view3d.js): a night scene, so its controls are dark glass ===== */
+#map3d, #map3dLabels, #v3Controls { display: none; }
+body.view3d #map { visibility: hidden; }
+body.view3d #map3d { display: block; position: absolute; cursor: grab; touch-action: none; border-radius: 8px; }
+body.view3d #map3d:active { cursor: grabbing; }
+body.view3d #map3dLabels { display: block; position: absolute; pointer-events: none; border-radius: 8px; }
+body.view3d .regionBar { display: none; }
+#btn3d { font-weight: 800; font-size: 13px; }
+body.radarFull.view3d #mapScreen { background: #06111f; }
+body.view3d .mapCard { background: #06111f; }
+
+/* ===== the route bar: from city · line with a moving plane · to city ===== */
+.routeBar { display: flex; align-items: center; gap: 12px; margin: 14px 0 4px; font-size: 14.5px; }
+.routeBar > b { white-space: nowrap; }
+.rbLine { position: relative; flex: 1; height: 6px; background: var(--panel2); border-radius: 4px; margin: 18px 0 20px; }
+.rbLine i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--saffron); border-radius: 4px; transition: width .3s linear; }
+.rbStop { position: absolute; top: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%; background: #ffffff; border: 2px solid #9aabbf; box-sizing: border-box; }
+.rbStop.passed { border-color: var(--saffron); }
+.rbStop em { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+.rbPlane { position: absolute; top: 50%; transform: translate(-50%, -50%); line-height: 0; transition: left .3s linear; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, .3)); }
+.rbPlane svg { display: block; }
+.moreDetails { margin-top: 6px; }
+.moreDetails summary { cursor: pointer; font-weight: 700; color: #1f6fd1; padding: 6px 0; }
+
+/* ===== land, coast, rivers and seas under the 2D radar (geo.js) ===== */
+.geoLand { fill: #e4ede3; fill-opacity: .8; stroke: #9fc0cc; stroke-width: 1.2; stroke-linejoin: round; }
+.geoHills { fill: none; stroke: #d3dbe0; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; opacity: .75; }
+.geoRiver { fill: none; stroke: #9cc8e6; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.geoSea { font-style: italic; font-weight: 600; font-size: 14px; fill: #87a6c0; text-anchor: middle; }
+
+/* ===== the details panel: hidden on the radar unless needed (fullscreen.js) ===== */
+body.panelHidden:not(.radarFull) #mapScreen { grid-template-columns: minmax(0, 1fr); }
+body.panelHidden:not(.radarFull) .side { display: none; }
+body:not(.radarFull) #hudPanelBtn { display: block; position: absolute; right: 14px; bottom: 12px; z-index: 4; font-weight: 700; background: #ffffff; }
+.side.leaving { animation: detailsUp .45s ease forwards; }
+@keyframes detailsUp { to { transform: translateY(-48px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .side.leaving { animation-duration: .01s; } }
+
+/* ===== pilot view (view3d.js) ===== */
+#v3PilotHud { display: none; position: absolute; left: 50%; top: 14px; transform: translateX(-50%); z-index: 4; max-width: calc(100% - 40px);
+  background: rgba(6, 16, 30, 0.86); color: #eef5ff; border: 1px solid rgba(127, 215, 255, 0.45); border-radius: 12px; padding: 8px 16px;
+  font-size: 13.5px; text-align: center; line-height: 1.45; pointer-events: none; }
+#v3PilotHud.show { display: block; }
+body:not(.view3d) #v3PilotHud { display: none; }
+#v3PilotHud b { color: #7fd7ff; }
+#v3PilotHud span { display: block; font-weight: 700; font-size: 15px; }
+#v3PilotHud em { display: block; font-style: normal; font-size: 11.5px; color: #9fb4cc; }
+#v3Pilot.on { background: #e8820c; color: #fff; border-color: #e8820c; }
+
+#v3Storm.on { background: #5b6fd6; color: #fff; border-color: #5b6fd6; }
+
+/* ===== fly the plane from the pilot view (view3d.js) ===== */
+#v3PilotKeys { display: none; margin-top: 6px; pointer-events: auto; }
+#v3PilotHud.flying #v3PilotKeys { display: block; }
+#v3PilotKeys button { margin: 2px 3px; padding: 4px 10px; border: 1px solid rgba(127, 215, 255, 0.5); border-radius: 8px; background: rgba(127, 215, 255, 0.12); color: #eef5ff; font: inherit; font-size: 12.5px; cursor: pointer; }
+#v3PilotKeys button:hover { background: rgba(127, 215, 255, 0.3); }
+#v3PilotHud .pilotNote { color: #ffd27f; font-size: 12.5px; }
+
+#v3Follow.on { background: #2f9e6b; color: #fff; border-color: #2f9e6b; }
+
+/* ===== the flights list on the left of the full-screen radar (fullscreen.js) ===== */
+body.radarFull #hudFlights { width: 284px; scrollbar-width: thin; scrollbar-color: rgba(127, 215, 255, 0.4) transparent; }
+body.radarFull .regionBar { left: 306px; }
+body.radarFull #hudExit { left: 306px; }
+.fcTitle { display: flex; align-items: center; gap: 9px; padding: 10px 14px; margin-bottom: 9px; border-radius: 14px; color: #eef5ff;
+  background: rgba(8, 20, 36, 0.84); border: 1px solid rgba(127, 215, 255, 0.38); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28); backdrop-filter: blur(8px); }
+.fcTitle b { font-size: 17px; letter-spacing: 0.4px; }
+.fcTitle::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #3be38a; animation: fcLive 1.6s infinite; }
+.fcCount { margin-left: auto; font-size: 12.5px; color: #9fd0ff; }
+.fcEmpty { display: none; color: #cfe3ff; background: rgba(8, 20, 36, 0.8); border-radius: 12px; padding: 10px 14px; font-size: 13px; }
+.fc { --c: #2f7fd6; position: relative; margin-bottom: 10px; padding: 11px 12px 10px 17px; border-radius: 14px; cursor: pointer; color: #eef5ff; font-size: 12.5px; line-height: 1.4;
+  background: linear-gradient(135deg, rgba(10, 24, 44, 0.92), rgba(16, 38, 66, 0.86)); border: 1px solid rgba(140, 190, 240, 0.28); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px); overflow: hidden; transition: transform 0.22s ease, box-shadow 0.25s ease, border-color 0.25s ease, opacity 0.35s ease; }
+.fc::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--c); box-shadow: 0 0 14px var(--c); }
+.fc:hover { transform: translateX(5px); box-shadow: 0 9px 24px rgba(0, 0, 0, 0.4); }
+.fc.on { border-color: #ffb454; transform: translateX(7px); box-shadow: 0 0 0 2px rgba(255, 180, 84, 0.35), 0 9px 24px rgba(0, 0, 0, 0.42); }
+.fc.alert { border-color: #ff5d6c; animation: fcAlert 1.1s ease-in-out infinite; }
+.fc.dim { opacity: 0.74; }
+.fc.enter { animation: fcIn 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.15) both; }
+@keyframes fcIn { from { opacity: 0; transform: translateX(-46px) scale(0.95); } to { opacity: 1; transform: none; } }
+@keyframes fcAlert { 50% { box-shadow: 0 0 0 3px rgba(255, 93, 108, 0.35), 0 0 24px rgba(255, 93, 108, 0.6); } }
+@keyframes fcLive { 0% { box-shadow: 0 0 0 0 rgba(59, 227, 138, 0.7); } 70% { box-shadow: 0 0 0 8px rgba(59, 227, 138, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 227, 138, 0); } }
+.fcTop { display: flex; align-items: center; gap: 7px; }
+.fcId { font-size: 15.5px; letter-spacing: 0.4px; }
+.fcType { font-size: 11.5px; padding: 1px 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); border: 1px solid var(--c); white-space: nowrap; }
+.fcBadge { margin-left: auto; display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.6px; padding: 2px 8px; border-radius: 6px; background: rgba(59, 227, 138, 0.18); color: #7dffb2; white-space: nowrap; }
+.fc.st-flying .fcBadge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #3be38a; animation: fcLive 1.4s infinite; }
+.fc.st-holding .fcBadge { background: rgba(255, 180, 84, 0.2); color: #ffcf86; }
+.fc.st-holding .fcBadge::before { content: '⟳'; display: inline-block; animation: fcSpin 1.6s linear infinite; }
+.fc.st-scheduled .fcBadge { background: rgba(150, 170, 200, 0.2); color: #c4d3ea; }
+.fc.st-landed .fcBadge { background: rgba(80, 160, 255, 0.2); color: #9fd0ff; }
+.fc.st-crashed .fcBadge { background: rgba(255, 93, 108, 0.22); color: #ff9aa3; animation: fcShake 0.5s 2; }
+.fc.alert .fcBadge { background: #ff3b4d; color: #fff; animation: fcShake 0.4s infinite; }
+.fc.alert .fcBadge::before { content: '⚠'; background: none; box-shadow: none; animation: none; width: auto; height: auto; }
+@keyframes fcSpin { to { transform: rotate(360deg); } }
+@keyframes fcShake { 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+.fcRoute { display: flex; align-items: center; gap: 8px; margin: 8px 0 8px; font-weight: 700; }
+.fcTrack { flex: 1; position: relative; height: 4px; margin: 0 12px; border-radius: 3px; background: rgba(255, 255, 255, 0.16); }
+.fcFill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 3px; background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), var(--c)); box-shadow: 0 0 9px var(--c); transition: width 0.9s ease; }
+.fcPlane { position: absolute; top: 50%; left: 0; width: 22px; height: 22px; margin: -11px 0 0 -11px; display: block; transition: left 0.9s ease; filter: drop-shadow(0 0 5px var(--c)); animation: fcBob 2.2s ease-in-out infinite; }
+.fcPlane svg { display: block; }
+@keyframes fcBob { 50% { transform: translateY(-1.8px); } }
+.fcStats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.fcStat { background: rgba(255, 255, 255, 0.07); border-radius: 9px; padding: 4px 4px 3px; text-align: center; min-width: 0; }
+.fcStat b { display: block; font-size: 13.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fcStat small { color: #9fb4cc; font-size: 10.5px; }
+.fcTrend { font-weight: 800; }
+.fcTrend.up { color: #7dffb2; }
+.fcTrend.down { color: #ffcf86; }
+.fcTrend.level { color: #9fd0ff; }
+.fcNext { margin-top: 8px; color: #cfe3ff; border-radius: 6px; }
+.fcNext b { color: #fff; }
+.fcNext b.bad { color: #ff9aa3; }
+.fcNext.bump { animation: fcBump 0.9s ease; }
+@keyframes fcBump { 0% { background: rgba(255, 210, 127, 0.45); } 100% { background: transparent; } }
+.fcEta { color: #9fb4cc; font-size: 11.5px; }
+.fcEta b { color: #dbe9ff; }
+/* the badge is never cut: the type name gets shorter instead, and the list leaves room for a card that slides right */
+.fcList { padding-right: 9px; }
+.fc.alert .fcName, .fc.st-holding .fcName { display: none; }   /* a long badge (CONFLICT, HOLDING #2): the type shows only its icon */
+.fcId, .fcBadge { flex: 0 0 auto; }
+.fcType { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 1250px) { body.radarFull #hudFlights { width: 250px; } body.radarFull .regionBar, body.radarFull #hudExit { left: 272px; } }
+@media (prefers-reduced-motion: reduce) { .fc, .fcFill, .fcPlane, .fcBadge, .fcTitle::before { animation: none !important; transition: none !important; } }
+
+/* ===== the 3D toolbar: one glass bar with three groups, centred in the free space (index.html, view3d.js) ===== */
+body.view3d #v3Controls { display: flex; position: absolute; left: 14px; right: 190px; bottom: 12px; z-index: 3; justify-content: center; pointer-events: none; }
+body.radarFull.view3d #v3Controls { left: 306px; right: 592px; }
+body.radarFull.panelHidden.view3d #v3Controls { right: 190px; }
+.v3Bar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 2px; max-width: 100%; padding: 5px; border-radius: 16px; pointer-events: auto;
+  background: rgba(8, 20, 36, 0.86); border: 1px solid rgba(127, 215, 255, 0.34); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.36); backdrop-filter: blur(8px); }
+.v3Group { display: flex; flex-wrap: nowrap; gap: 3px; padding: 0 3px; }
+.v3Sep { width: 1px; align-self: stretch; margin: 4px 5px; background: rgba(127, 215, 255, 0.3); }
+#v3Controls button { padding: 7px 13px; font-size: 13px; font-weight: 700; color: #e3eefb; background: transparent; border: 1px solid transparent; border-radius: 11px;
+  cursor: pointer; white-space: nowrap; transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease; }
+#v3Controls button:hover { background: rgba(127, 215, 255, 0.16); border-color: rgba(127, 215, 255, 0.38); transform: translateY(-1px); }
+#v3Controls button:active { transform: translateY(0); }
+#v3Controls button.on { background: var(--saffron); color: #ffffff; border-color: var(--saffron); box-shadow: 0 0 12px rgba(232, 131, 12, 0.5); }
+@media (max-width: 1250px) { body.radarFull.view3d #v3Controls { left: 272px; right: 522px; } body.radarFull.panelHidden.view3d #v3Controls { right: 190px; } }
+/* when the room is small (the details panel is open, or the window is narrow) the three groups stack: one group on each row, with a thin line between them */
+body.radarFull:not(.panelHidden).view3d .v3Bar { flex-direction: column; align-items: stretch; gap: 0; }
+body.radarFull:not(.panelHidden).view3d .v3Group { justify-content: center; }
+body.radarFull:not(.panelHidden).view3d .v3Sep { width: auto; height: 1px; margin: 3px 8px; align-self: stretch; }
+body.radarFull:not(.panelHidden).view3d #v3Controls button { padding: 6px 9px; font-size: 12.5px; }
+@media (max-width: 1250px) {
+  body.view3d .v3Bar { flex-direction: column; align-items: stretch; gap: 0; }
+  body.view3d .v3Group { justify-content: center; }
+  body.view3d .v3Sep { display: block; width: auto; height: 1px; margin: 3px 8px; align-self: stretch; }
+  body.view3d #v3Controls button { padding: 6px 8px; font-size: 12px; }
+}
+@media (max-width: 760px) { body.view3d #v3Controls, body.radarFull.view3d #v3Controls, body.radarFull.panelHidden.view3d #v3Controls { left: 8px; right: 8px; } .v3Sep { display: none; } }
