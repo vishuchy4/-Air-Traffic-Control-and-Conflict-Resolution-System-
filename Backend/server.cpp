@@ -1,5 +1,16 @@
+// server.cpp : the web server. It connects the C++ air traffic system to the UI.
+//
+// It does 2 jobs:
+//   1. sends the UI files (index.html, style.css, *.js) to the browser
+//   2. passes every "/api/..." question to api.cpp and sends back the JSON answer
+//
+// Run:  ./aeroguard_server            (port 8080, UI from ../frontend)
+//       ./aeroguard_server 9000 web   (another port and UI folder)
+// Single-file build ("make single" -> aeroguard.exe): the website is inside the program, so no folder is needed.
+
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -8,9 +19,13 @@
 #include <vector>
 
 #include "airspace.h"
-#include "routes.h"
-#include "safety.h"
+#include "api.h"
 
+#ifdef SINGLE_FILE
+#include "webfiles.h"      // the single-file build carries the website inside it
+#endif
+
+// Sockets are written a little differently on Windows and on Linux / Mac.
 #ifdef _WIN32
 #include <winsock2.h>
 #else
@@ -24,199 +39,14 @@ typedef int SOCKET;
 
 using namespace std;
 
-string urlDecode(const string& text) {
-    string out;
-    for (size_t i = 0; i < text.size(); i++) {
-        if (text[i] == '+') out += ' ';
-        else if (text[i] == '%' && i + 2 < text.size()) {
-            out += (char)strtol(text.substr(i + 1, 2).c_str(), nullptr, 16);
-            i += 2;
-        }
-        else out += text[i];
-    }
-    return out;
-}
+// =====================================================================
+// 4. The web server
+// =====================================================================
 
-map<string, string> readForm(const string& text) {
-    map<string, string> form;
-    stringstream ss(text);
-    string pair;
-    while (getline(ss, pair, '&')) {
-        size_t eq = pair.find('=');
-        if (eq != string::npos)
-            form[urlDecode(pair.substr(0, eq))] = urlDecode(pair.substr(eq + 1));
-    }
-    return form;
-}
-
-vector<string> split(const string& text, char sep) {
-    vector<string> parts;
-    stringstream ss(text);
-    string part;
-    while (getline(ss, part, sep)) parts.push_back(part);
-    return parts;
-}
-
-vector<int> readNumbers(const string& text) {
-    vector<int> numbers;
-    for (const string& p : split(text, ','))
-        if (!p.empty()) numbers.push_back(atoi(p.c_str()));
-    return numbers;
-}
-
-void readWeather(const string& text) {
-    vector<int> pen = readNumbers(text);
-    for (int i = 0; i < CITY_COUNT; i++)
-        weatherPenalty[i] = i < (int)pen.size() ? pen[i] : 0;
-}
-
-bool readPlane(const string& text, Plane& p) {
-    vector<string> f = split(text, ';');
-    if (f.size() < 8) return false;
-
-    p.id = f[0];
-    p.priority = atoi(f[1].c_str());
-    p.route = readNumbers(f[2]);
-    p.leg = atoi(f[3].c_str());
-    p.progress = atof(f[4].c_str());
-    p.altitude = atoi(f[5].c_str());
-    p.speed = atoi(f[6].c_str());
-    p.status = atoi(f[7].c_str());
-
-    if (p.route.size() < 2 || p.leg < 0 || p.leg >= (int)p.route.size()) return false;
-    for (int city : p.route)
-        if (city < 0 || city >= CITY_COUNT) return false;
-
-    return true;
-}
-
-string num(double value) {
-    char text[32];
-    snprintf(text, sizeof(text), "%.3f", value);
-    return text;
-}
-
-string routeJson(const Route& r) {
-    string path = "[";
-    for (size_t i = 0; i < r.cities.size(); i++)
-        path += to_string(r.cities[i]) + (i + 1 < r.cities.size() ? "," : "");
-    return "{\"path\":" + path + "],\"cost\":" + to_string(r.cost) + ",\"km\":" + to_string(r.km) + "}";
-}
-
-string pointJson(const Point& p) {
-    return "{\"lat\":" + num(p.lat) + ",\"lon\":" + num(p.lon) + "}";
-}
-
-string answerPing() {
-    return "{\"ok\":true,\"name\":\"AeroGuard C++ backend\",\"cities\":" + to_string(CITY_COUNT) + "}";
-}
-
-string answerAirspace() {
-    string cityList, roadList;
-    for (int a = 0; a < CITY_COUNT; a++) {
-        if (a > 0) cityList += ",";
-        cityList += "{\"name\":\"" + cities[a].name + "\",\"lat\":" + num(cities[a].lat) + ",\"lon\":" + num(cities[a].lon) +
-                    ",\"macro\":" + (cities[a].isHub ? "1" : "0") + ",\"region\":" + to_string(cities[a].region) + "}";
-
-        for (int b = 0; b < CITY_COUNT; b++) {
-            if (roadKm[a][b] == 0) continue;
-            if (!roadList.empty()) roadList += ",";
-            roadList += "{\"from\":" + to_string(a) + ",\"to\":" + to_string(b) + ",\"km\":" + to_string(roadKm[a][b]) + "}";
-        }
-    }
-    return "{\"cities\":[" + cityList + "],\"roads\":[" + roadList + "]}";
-}
-
-string answerRoutes(map<string, string>& form) {
-    int from = atoi(form["from"].c_str());
-    int to = atoi(form["to"].c_str());
-    readWeather(form["pen"]);
-    if (from < 0 || to < 0 || from >= CITY_COUNT || to >= CITY_COUNT)
-        return "{\"options\":[]}";
-
-    vector<Route> options;
-
-    if (form.count("avoid") || form.count("bannedFrom")) {
-        vector<int> avoid = readNumbers(form["avoid"]);
-        int bannedFrom = form.count("bannedFrom") ? atoi(form["bannedFrom"].c_str()) : NONE;
-        int bannedTo = form.count("bannedTo") ? atoi(form["bannedTo"].c_str()) : NONE;
-        Route r;
-        if (findRoute(from, to, bannedFrom, bannedTo, avoid, r))
-            options.push_back(r);
-    }
-    else {
-        options = findRouteOptions(from, to);
-    }
-
-    string list;
-    for (size_t i = 0; i < options.size(); i++)
-        list += (i ? "," : "") + routeJson(options[i]);
-
-    return "{\"options\":[" + list + "]}";
-}
-
-string answerCheck(map<string, string>& form) {
-    readWeather(form["pen"]);
-    vector<Plane> planes;
-
-    for (const string& text : split(form["planes"], '|')) {
-        Plane p;
-        if (readPlane(text, p)) planes.push_back(p);
-    }
-
-    string now, coming;
-    for (size_t i = 0; i < planes.size(); i++) {
-        for (size_t j = i + 1; j < planes.size(); j++) {
-            Plane& a = planes[i];
-            Plane& b = planes[j];
-
-            if (inConflict(a, b)) {
-                if (!now.empty()) now += ",";
-                now += "{\"a\":\"" + a.id + "\",\"b\":\"" + b.id + "\",\"km\":" + num(kmApart(a, b)) +
-                       ",\"feet\":" + to_string(feetApart(a, b)) + "}";
-                continue;
-            }
-
-            if (a.status != FLYING || b.status != FLYING) continue;
-
-            Prediction p = predictConflict(a, b);
-            if (!p.found) continue;
-
-            if (!coming.empty()) coming += ",";
-            coming += "{\"a\":\"" + a.id + "\",\"b\":\"" + b.id + "\",\"start\":" + to_string(p.startMinute) +
-                      ",\"km\":" + num(p.closestKm) + ",\"feet\":" + to_string(p.feet) +
-                      ",\"pa\":" + pointJson(p.a) + ",\"pb\":" + pointJson(p.b) + "}";
-        }
-    }
-
-    return "{\"conflicts\":[" + now + "],\"predictions\":[" + coming + "]}";
-}
-
-string answerWhatIf(map<string, string>& form) {
-    readWeather(form["pen"]);
-    Plane change, other;
-
-    if (!readPlane(form["change"], change) || !readPlane(form["other"], other))
-        return "{\"tests\":[]}";
-
-    auto fixes = [&](const Plane& copy) {
-        return (!predictConflict(copy, other).found && !inConflict(copy, other)) ? 1 : 0;
-    };
-
-    int up = change.altitude + 1000 <= 40000 ? 1000 : -1000;
-    Plane newRoute;
-    int routeResult = withNewRoute(change, newRoute) ? fixes(newRoute) : -1;
-
-    return "{\"tests\":["
-           "{\"kind\":\"alt\",\"amount\":" + to_string(up) + ",\"result\":" + to_string(fixes(withAltitude(change, up))) + "},"
-           "{\"kind\":\"spd\",\"amount\":-100,\"result\":" + to_string(fixes(withSpeed(change, -100))) + "},"
-           "{\"kind\":\"route\",\"amount\":0,\"result\":" + to_string(routeResult) + "}]}";
-}
-
+// Reads a UI file. Returns false if it does not exist.
 bool readFile(const string& path, string& content) {
     ifstream file(path, ios::binary);
     if (!file) return false;
-
     stringstream ss;
     ss << file.rdbuf();
     content = ss.str();
@@ -236,15 +66,17 @@ void sendReply(SOCKET client, int status, const string& type, const string& body
                    "Content-Length: " + to_string(body.size()) + "\r\n"
                    "Cache-Control: no-store\r\n"
                    "Connection: close\r\n\r\n" + body;
-
     send(client, reply.c_str(), (int)reply.size(), 0);
 }
 
 int main(int argc, char* argv[]) {
     int port = argc > 1 ? atoi(argv[1]) : 8080;
-    string uiFolder = argc > 2 ? argv[2] : "../frontend";
+    string uiFolder = argc > 2 ? argv[2] : "../Frontend";
 
-    setupAirspace();
+    setupAirspace();                         // distances, linked lists of roads, regions (airspace.cpp)
+    // random +0 / +500 ft altitudes; set AEROGUARD_SEED for the same numbers every run (handy for demos)
+    const char* seed = getenv("AEROGUARD_SEED");
+    srand(seed ? (unsigned)atoi(seed) : (unsigned)time(nullptr));
 
 #ifdef _WIN32
     WSADATA wsa;
@@ -257,71 +89,60 @@ int main(int argc, char* argv[]) {
 
     sockaddr_in address = {};
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);   // only this computer can connect
     address.sin_port = htons((unsigned short)port);
 
     if (bind(server, (sockaddr*)&address, sizeof(address)) < 0 || listen(server, 10) < 0) {
         cout << "Could not use port " << port << ". Try another one, e.g. ./aeroguard_server 9000" << endl;
         return 1;
     }
-
     cout << "UI files from: " << uiFolder << endl;
-    cout << "AeroGuard server running. Open http://localhost:" << port << "  (Ctrl+C to stop)" << endl;
+    cout << "AeroGuard server running. Open http://localhost:" << port << "  (Ctrl+C to stop)" << endl;   // endl shows it at once (also in MSYS2)
+#if defined(_WIN32) && defined(SINGLE_FILE)
+    string open = "start http://localhost:" + to_string(port);      // the single .exe opens the browser by itself
+    system(open.c_str());
+#endif
 
     while (true) {
         SOCKET client = accept(server, nullptr, nullptr);
 
+        // 1. read the request: first the headers, then the body (its size is in Content-Length)
         string data;
         char buffer[4096];
         int got;
-
-        while (data.find("\r\n\r\n") == string::npos &&
-               (got = recv(client, buffer, sizeof(buffer), 0)) > 0)
+        while (data.find("\r\n\r\n") == string::npos && (got = recv(client, buffer, sizeof(buffer), 0)) > 0)
             data.append(buffer, got);
 
         size_t end = data.find("\r\n\r\n");
-        if (end == string::npos) {
-            closesocket(client);
-            continue;
-        }
+        if (end == string::npos) { closesocket(client); continue; }
 
         string headers = data.substr(0, end);
         string body = data.substr(end + 4);
 
         size_t lengthAt = headers.find("Content-Length:");
         if (lengthAt == string::npos) lengthAt = headers.find("content-length:");
-
-        size_t length = lengthAt == string::npos ? 0 :
-                        strtoul(headers.c_str() + lengthAt + 15, nullptr, 10);
-
-        while (body.size() < length &&
-               (got = recv(client, buffer, sizeof(buffer), 0)) > 0)
+        size_t length = lengthAt == string::npos ? 0 : strtoul(headers.c_str() + lengthAt + 15, nullptr, 10);
+        while (body.size() < length && (got = recv(client, buffer, sizeof(buffer), 0)) > 0)
             body.append(buffer, got);
 
+        // 2. the first line, e.g. "POST /api/routes HTTP/1.1"
         string method, target;
         stringstream(headers) >> method >> target;
         string path = target.substr(0, target.find('?'));
 
-        map<string, string> form = readForm(
-            target.find('?') != string::npos ? target.substr(target.find('?') + 1) : body
-        );
-
-        if (path == "/api/ping")
-            sendReply(client, 200, "application/json", answerPing());
-        else if (path == "/api/airspace")
-            sendReply(client, 200, "application/json", answerAirspace());
-        else if (path == "/api/routes")
-            sendReply(client, 200, "application/json", answerRoutes(form));
-        else if (path == "/api/check")
-            sendReply(client, 200, "application/json", answerCheck(form));
-        else if (path == "/api/whatif")
-            sendReply(client, 200, "application/json", answerWhatIf(form));
-        else {
+        // 3. answer: an API question (api.cpp), or a UI file
+        string json;
+        if (answerApi(path, target.find('?') != string::npos ? target.substr(target.find('?') + 1) : body, json)) {
+            sendReply(client, 200, "application/json", json);
+        } else {
             string file = (path == "/") ? "/index.html" : path;
             string content;
-
-            if (file.find("..") == string::npos && readFile(uiFolder + file, content))
-                sendReply(client, 200, typeOf(file), content);
+            bool found = file.find("..") == string::npos && readFile(uiFolder + file, content);   // the website folder
+#ifdef SINGLE_FILE
+            if (!found) found = embeddedFile(file, content);                                    // or the copy inside the program
+#endif
+            if (found)
+                sendReply(client, 200, typeOf(file), content);                // a UI file
             else
                 sendReply(client, 404, "text/plain", "Not found: " + file);
         }
